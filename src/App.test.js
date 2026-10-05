@@ -1,6 +1,44 @@
 import { fireEvent, render, screen, within } from "@testing-library/react";
 import App from "./App";
 
+beforeEach(() => localStorage.clear());
+afterEach(() => jest.restoreAllMocks());
+
+test("saves theme and favorites and restores them after remounting", () => {
+  const { unmount } = render(<App />);
+  fireEvent.click(screen.getByRole("button", { name: "Dark" }));
+  fireEvent.click(screen.getAllByRole("button", { name: "Yêu thích" })[0]);
+  expect(JSON.parse(localStorage.getItem("app-theme"))).toBe("dark");
+  expect(JSON.parse(localStorage.getItem("movie-favorites"))).toEqual([1]);
+  unmount();
+
+  render(<App />);
+  expect(screen.getByRole("main")).toHaveClass("dark");
+  const favorite = screen.getAllByRole("button", { name: "Yêu thích" })[0];
+  expect(favorite).toHaveAttribute("aria-pressed", "true");
+  fireEvent.click(favorite);
+  expect(JSON.parse(localStorage.getItem("movie-favorites"))).toEqual([]);
+});
+
+test.each(["not json", "null", "{}", "[999]", "[1,1]"])("falls back for invalid saved data: %s", (saved) => {
+  localStorage.setItem("app-theme", saved);
+  localStorage.setItem("movie-favorites", saved);
+  render(<App />);
+  expect(screen.getByRole("main")).toHaveClass("light");
+  expect(screen.getAllByRole("button", { name: "Yêu thích" })[0]).toHaveAttribute("aria-pressed", "false");
+});
+
+test("keeps working when browser storage is unavailable", () => {
+  jest.spyOn(Storage.prototype, "getItem").mockImplementation(() => { throw new Error("Blocked"); });
+  jest.spyOn(Storage.prototype, "setItem").mockImplementation(() => { throw new Error("Blocked"); });
+  render(<App />);
+  fireEvent.click(screen.getByRole("button", { name: "Dark" }));
+  expect(screen.getByRole("main")).toHaveClass("dark");
+  const favorite = screen.getAllByRole("button", { name: "Yêu thích" })[0];
+  fireEvent.click(favorite);
+  expect(favorite).toHaveAttribute("aria-pressed", "true");
+});
+
 const titles = () => within(screen.getByRole("list", { name: "Movies" }))
   .getAllByRole("heading", { level: 2 }).map((heading) => heading.textContent);
 

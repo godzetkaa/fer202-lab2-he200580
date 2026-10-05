@@ -7,13 +7,20 @@ import MovieList from "./components/MovieList";
 import MovieDetail from "./components/MovieDetail";
 import { ThemeContext, ThemeProvider } from "./context/ThemeContext";
 import { movies } from "./data/movies";
+import useLocalStorage from "./hooks/useLocalStorage";
 
 function MovieManager() {
   const { darkMode } = useContext(ThemeContext);
   const [search, setSearch] = useState("");
   const [genre, setGenre] = useState("All genres");
   const [sort, setSort] = useState("default");
-  const [favorites, setFavorites] = useState([]);
+  const [favorites, setFavorites] = useLocalStorage(
+    "movie-favorites",
+    [],
+    (value) => Array.isArray(value) &&
+      value.every((id) => movies.some((movie) => movie.id === id)) &&
+      new Set(value).size === value.length
+  );
   const [selectedMovie, setSelectedMovie] = useState(null);
 
   const visibleMovies = movies.filter((movie) =>
