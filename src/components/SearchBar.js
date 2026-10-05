@@ -8,10 +8,10 @@ export default function SearchBar({ search, onSearchChange }) {
   }
   return (
     <div className="field search-field">
-      <label htmlFor="movie-search">Search by title</label>
+      <label htmlFor="movie-search">Tìm tên phim</label>
       <div className="search-controls">
-        <input id="movie-search" ref={searchInputRef} type="search" placeholder="Enter a movie title" value={search} onChange={(event) => onSearchChange(event.target.value)} />
-        <button type="button" onClick={clearSearch}>Clear</button>
+        <input id="movie-search" ref={searchInputRef} type="search" placeholder="Nhập tiêu đề phim" value={search} onChange={(event) => onSearchChange(event.target.value)} />
+        <button type="button" onClick={clearSearch}>Xóa</button>
       </div>
     </div>
   );

@@ -15,15 +15,27 @@ test("shows movie metadata and toggles theme, favorite, and details", () => {
   expect(screen.getByRole("main")).toHaveClass("dark");
   fireEvent.click(screen.getByRole("button", { name: "Light" }));
   expect(screen.getByRole("main")).toHaveClass("light");
-  const favorite = within(movie).getByRole("button", { name: /Favorite/ });
+  const favorite = within(movie).getByRole("button", { name: "Yêu thích" });
+  const star = within(movie).getByRole("img", { name: "Not favorite" });
+  expect(star.tagName).toBe("SPAN");
+  fireEvent.click(star);
+  expect(favorite).toHaveAttribute("aria-pressed", "false");
   fireEvent.click(favorite);
   expect(favorite).toHaveAttribute("aria-pressed", "true");
+  expect(star).toHaveClass("is-favorite");
   fireEvent.click(favorite);
   expect(favorite).toHaveAttribute("aria-pressed", "false");
-  fireEvent.click(within(movie).getByRole("button", { name: "View detail" }));
-  expect(screen.getByRole("dialog")).toHaveAccessibleName("Interstellar");
-  expect(screen.getByText("Christopher Nolan")).toBeInTheDocument();
+  expect(star).not.toHaveClass("is-favorite");
+  fireEvent.click(within(movie).getByRole("button", { name: "Chi tiết" }));
+  const detail = screen.getByRole("region", { name: "Details for Interstellar" });
+  expect(detail).toBeInTheDocument();
+  expect(movie).not.toContainElement(detail);
+  expect(within(detail).getByText("Christopher Nolan")).toBeInTheDocument();
+  expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   fireEvent.click(screen.getByRole("button", { name: "Close detail" }));
+  expect(screen.queryByRole("region", { name: "Details for Interstellar" })).not.toBeInTheDocument();
+  fireEvent.click(within(movie).getByRole("button", { name: "Interstellar" }));
+  expect(screen.getByRole("region", { name: "Details for Interstellar" })).toBeInTheDocument();
 });
 
 test("search updates immediately and combines with genre; clear focuses input", () => {
@@ -35,8 +47,8 @@ test("search updates immediately and combines with genre; clear focuses input", 
   expect(titles()).toEqual(["The Grand Budapest Hotel"]);
   fireEvent.change(search, { target: { value: "Interstellar" } });
   expect(screen.queryByRole("list")).not.toBeInTheDocument();
-  expect(screen.getByText(/No movies match/)).toBeInTheDocument();
-  fireEvent.click(screen.getByRole("button", { name: "Clear" }));
+  expect(screen.getByText("Không tìm thấy")).toBeInTheDocument();
+  fireEvent.click(screen.getByRole("button", { name: "Xóa" }));
   expect(search).toHaveFocus();
   expect(search).toHaveValue("");
   expect(titles()).toEqual(["The Grand Budapest Hotel"]);
@@ -53,6 +65,6 @@ test("rating sorting works on search results and default restores source order",
   expect(titles()).toEqual(["The Grand Budapest Hotel", "The Dark Knight"]);
   fireEvent.change(sort, { target: { value: "default" } });
   expect(titles()).toEqual(["The Dark Knight", "The Grand Budapest Hotel"]);
-  fireEvent.click(screen.getByRole("button", { name: "Clear" }));
+  fireEvent.click(screen.getByRole("button", { name: "Xóa" }));
   expect(titles()[0]).toBe("Interstellar");
 });
